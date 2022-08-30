@@ -1,0 +1,225 @@
+swagger: "2.0"
+info:
+  description: "Booking service API"
+  version: "1.0.0"
+  title: "Booking service"
+
+tags:
+- name: "booking"
+  description: "Operations with bookings"
+- name: "user"
+  description: "Operations with user"
+
+paths:
+  /booking:
+    post:
+      tags:
+      - "booking"
+      summary: "Create booking"
+      description: "Создание бронирования"
+      operationId: "postBooking"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Создание нового бронирования с переданными параметрами"
+        required: true
+        schema:
+          $ref: '#/components/schemas/BookingReq'
+      responses:
+        "201":
+          description: "Created"
+          schema:
+            $ref: "#/components/schemas/BookingResp"
+        "500":
+          description: "Что-то пошло не так..."    
+      
+  /booking/{id}/details:
+    get:
+      tags:
+      - "booking"
+      summary: "Get booking details"
+      description: "Получение деталей бронирования"
+      operationId: "getBookingDetails"
+      parameters:
+      - in: "path"
+        name: "id"
+        description: "Идентификатор бронирования"
+        required: true
+        type: integer
+      
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/components/schemas/GetBookingResp"
+        "400":
+          description: "Bad request"
+        "401":
+          description: "Authorization error"
+        "404":
+          description: "Booking not found"
+        "500":
+          description: "Internal server error"
+          
+  /user/{id}/bookingHistory:
+    get:
+      tags:
+      - "user"
+      summary: "Get booking history"
+      description: "Получение истории бронирований пользователя"
+      operationId: "getBookingHistory"
+      parameters:
+      - in: "path"
+        name: "id"
+        description: "Идентификатор пользователя"
+        required: true
+        type: integer
+      - $ref: '#/components/parameters/orderbyParam'  
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            description: "Массив бронирований пользователя"
+            items:
+                $ref: "#/components/schemas/GetBookingResp"
+        "400":
+          description: "Bad request"
+        "401":
+          description: "Authorization error"
+        "404":
+          description: "Booking not found"
+        "500":
+          description: "Internal server error"
+          
+
+components:
+
+  parameters:
+    orderbyParam:
+      description: "Способ сортировки"
+      name: orderby
+      in: query
+      required: false
+      type: array
+      items:
+        $ref: "#/components/schemas/SortByDate"
+        
+  schemas:
+    GetBookingResp:
+      type: object
+      required:
+        - id
+        - name
+        - createdOn
+        - tableNumber
+        - phoneNumber
+        - status
+      properties:
+        id:
+          type: integer
+          description: Идентификатор бронирования
+          nullable: false
+        name:
+          type: string
+          description: Название ресторана
+          nullable: false
+        createdOn:
+          type: string
+          format: date-time
+          nullable: false
+          description: Дата и время бронирования
+        phoneNumber:
+          type: string
+          nullable: false
+          description: Контактный телефон гостя
+        tableNumber:
+          type: integer
+          description: Уникальный ID столика
+          nullable: false
+        status:
+          type: string
+          enum:
+            - Подтверждено
+            - Не подтверждено
+            - Завершено
+            - Отменено
+          x-enumNames:
+            - confirmed
+            - notСonfirmed
+            - completed
+            - canceled
+          description: Статус бронирования
+          nullable: false  
+        client:
+          type: string
+          description: Имя клиента
+          nullable: true
+        guestsNumber:  
+          type: integer
+          description: Количество гостей
+          nullable: true
+          
+    BookingReq:
+      type: object
+      required:
+        - name
+        - createdOn
+        - tableNumber
+        - phoneNumber
+        - client
+      properties:
+        name:  
+          type: string
+          description: Название ресторана
+          nullable: false
+        createdOn:
+          type: string
+          format: date-time
+          nullable: false
+          description: Дата и время бронирования
+        phoneNumber:
+          type: string
+          nullable: false
+          description: Контактный телефон гостя
+        tableNumber:
+          type: integer
+          description: Уникальный ID столика
+          nullable: false
+        client:
+          type: string
+          description: Имя клиента
+          nullable: true
+        guestsNumber:  
+          type: integer
+          description: Количество гостей
+          nullable: true
+    BookingResp:
+      type: object
+      required:
+        - id
+        - createdOn
+      properties:
+        id:  
+          type: integer
+          description: Идентификатор созданного бронирования
+          nullable: false
+        createdOn:  
+          type: string
+          format: date-time 
+          description: Дата и время создания бронирования
+          nullable: false  
+    SortByDate:
+      description: Атрибуты сортировки
+      properties:
+          createdOn:
+            type: string
+            format: date-time
+            nullable: false
+            description: Дата и время бронирования
+          sortingMethod:
+            type: string
+            enum:
+              - asc
+              - desc
+      
