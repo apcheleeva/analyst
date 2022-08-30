@@ -1,0 +1,52 @@
+@startuml 
+Actor "Booking Web Application" as user 
+
+participant "Authorization Service" as auth #lightgreen 
+participant "Booking Service" as booking #lightgreen
+database "Booking DataBase" as db
+
+booking -[#black]>> auth: Запрашивает публичный ключ
+activate booking
+activate auth
+auth --[#black]>> booking: Публичный ключ
+deactivate auth 
+deactivate booking
+
+== Authorization ==
+autonumber "[00]" 
+user -[#black]> auth: <b>{login,password}
+activate user
+activate auth 
+auth -[#black]> auth: Аутентифицирует пользователя
+
+alt Проверка успешна
+auth -[#black]> auth: Генерирует JWT token
+auth --[#black]>> user: <b>{JWT token}
+else Проверка не успешна
+auth --[#red]>> user: <b>"<font color=red>Re: Ошибка аутентификации"
+else Ошибка сервера
+auth --[#red]>> user: <b>"<font color=red> Re: 504 Gateway Timeout"
+
+loop 3 times
+user -[#black]> auth: <b> {login,password}
+deactivate auth
+end 
+end
+
+user -[#black]> booking: <b> GET... + {JWT Token}
+activate booking
+booking -[#black]> booking: Используя публичный ключ проверяет подпись JWT
+
+alt Токен не валидный
+booking --[#red]>> user: <b>"<font color=red>Re: Ошибка аутентификации"
+else Токен валидный
+booking -[#black]> booking: Извлекает данные из JWT, авторизует пользователя
+booking -[#black]> db: Получает данные по запросу пользователя
+activate db
+db --[#black]>> booking: Данные
+deactivate db
+booking --[#black]>> user: <b> <b> Re: 200OK + Запрошенные данные
+deactivate booking
+deactivate user
+end
+@enduml
